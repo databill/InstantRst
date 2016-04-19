@@ -66,6 +66,14 @@ endfun "}}}
 
 let s:host = 'localhost'
 
+function! s:getExtraPath(filename)
+    let cmd = "cat "
+              \.a:filename
+              \." | grep -i '\.\. image::' | sed 's/\.\. image:: //' | sed 's/\\/.*$//' |sort |uniq "
+    let extrapath = system(cmd)
+    return extrapath
+endfun
+
 function! s:startDaemon(file) "{{{
     if !executable('instantRst')
         echoe "[InstantRst] intant-rst.py is required."
@@ -93,8 +101,14 @@ function! s:startDaemon(file) "{{{
                     \ ' -l ' : ''
         let args_additional_dirs = ''
 
+        let extrapath = s:getExtraPath(substitute(a:file, ' ', '\\ ', 'g'))
+
         for directory in g:instant_rst_additional_dirs
             let args_additional_dirs .= ' -d '.directory
+        endfor
+
+        for directory in split(extrapath)
+           let args_additional_dirs .= ' -d '.directory
         endfor
 
         let  cmd = "instantRst "
